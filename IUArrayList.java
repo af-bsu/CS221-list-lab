@@ -1,41 +1,74 @@
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 /**
+ * A fully-functional implementation of the IndexedUnsortedList
+ * interface as guided during CS221 lectures at Boise State
+ * University in Fall 2026. ListIterator is unsupported.
  * 
+ * @author Amira Freeman
+ * @param <T> as an over-arching alias for the Object-type objects stored in the array
  */
 public class IUArrayList<T> implements IndexedUnsortedList<T> {
+
     private static int DEFAULT_CAPACITY = 10;
     private int rear, modCount;
     private T[] array;
 
+    /* Public constructor using a default array capacity with no parameters */
     public IUArrayList() {
         this(DEFAULT_CAPACITY);
     }
 
+    /**
+     * Public constructor using a user-defined array capacity via integer parameter 
+     * @param initialCapacity
+     */
+    @SuppressWarnings("unchecked")
     public IUArrayList(int initialCapacity) {
         rear = 0;
         modCount = 0;
         array = (T[])(new Object[initialCapacity]);
     }
 
+    /**
+     * Expands the array by double its current size if there is
+     * no available space inside the array, or logically speaking,
+     * if the end marker for the array exceeds its capacity.
+     */
     private void expandIfNecessary() {
         if (rear >= array.length) {
             array = Arrays.copyOf(array, array.length * 2);
         }
     }
 
-    private void shiftItems(String direction, int startingIndex) {
+    /**
+     * When adding or removing elements from the array, it is
+     * necessary that all the items in the array are shifted to
+     * their respective places before or after the modification
+     * is made. This method, when given a direction and target
+     * index, will shift the remainder of the array from a given
+     * index to the left or right once an element is removed or
+     * when an element is being added, respectively. The result
+     * of this shifting will leave holes or duplicates in the
+     * array if they are not handled appropriately in the
+     * following statements after this method is called.
+     * 
+     * @param direction to which the items should be shifted
+     * @param targetIndex to which the shifting should begin or end depending on the direction
+     */
+    private void shiftItems(String direction, int targetIndex) {
         switch (direction) {
             case "left" -> {
-                for (int i = startingIndex; i < rear; i++) {
+                for (int i = targetIndex; i < rear; i++) {
                     array[i] = array[i + 1];
                 }
             }
             case "right" -> {
-                for (int i = rear; i > startingIndex; i--) {
+                for (int i = rear; i > targetIndex; i--) {
                     array[i] = array[i - 1];
                 }
             }
@@ -64,17 +97,28 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public void add(T element) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        addToRear(element);
     }
 
     @Override
     public void addAfter(T element, T target) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int index = indexOf(target);
+        if (index < 0) {
+            throw new NoSuchElementException();
+        }
+        add(index + 1, element);
     }
 
     @Override
     public void add(int index, T element) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        expandIfNecessary();
+        if (index < 0 || index > rear) {
+            throw new IndexOutOfBoundsException();
+        }
+        shiftItems("right", index);
+        array[index] = element;
+        rear++;
+        modCount++;
     }
 
     @Override
@@ -104,12 +148,29 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public T remove(T element) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        int index = indexOf(element);
+        if (index < 0) {
+            throw new NoSuchElementException();
+        }
+        T returnElement = array[index];
+        shiftItems("left", index);
+        array[rear - 1] = null;
+        rear--;
+        modCount++;
+        return returnElement;
     }
 
     @Override
     public T remove(int index) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (index < 0 || index >= rear) {
+            throw new IndexOutOfBoundsException();
+        }
+        T returnElement = array[index];
+        shiftItems("left", index);
+        array[rear - 1] = null;
+        rear--;
+        modCount++;
+        return returnElement;
     }
 
     @Override
@@ -160,7 +221,7 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public boolean contains(Object target) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return (indexOf(target) != -1);
     }
 
     @Override
@@ -175,12 +236,24 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public String toString() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        StringBuilder builder = new StringBuilder();
+        builder.append("[ ");
+        if (rear == 0) {
+            builder.append("]");
+            return builder.toString();
+        }
+        for (int i = 0; i < rear; i++) {
+            builder.append(array[i]);
+            builder.append(", ");
+        }
+        builder.delete(builder.length() - 2, builder.length());
+        builder.append(" ]");
+        return builder.toString();
     }
 
     @Override
     public Iterator<T> iterator() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new ALIterator();
     }
 
     @Override
@@ -193,18 +266,62 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    // private class ALIterator<T> implements Iterator {
+    /**
+     * A fully-functional private iterator class for an
+     * instance of IUArrayList.
+     * 
+     * @author Amira Freeman
+     */
+    private class ALIterator implements Iterator<T> {
 
-    //     @Override
-    //     public boolean hasNext() {
-    //         throw new UnsupportedOperationException("Not supported yet.");
-    //     }
+		private int nextIndex, iterModCount;
+		private boolean canRemove;
 
-    //     @Override
-    //     public T next() {
-    //         throw new UnsupportedOperationException("Not supported yet.");
-    //     }
+        /* Private-scope constructor */
+        public ALIterator() {
+            nextIndex = 0;
+            iterModCount = modCount;
+            canRemove = false;
+        }
+
+        private void fastfailCheck() {
+            if (iterModCount != modCount) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            fastfailCheck();
+            return (array[nextIndex] != null);
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            T element = array[nextIndex];
+            nextIndex++;
+            canRemove = true;
+            return element;
+        }
+
+        @Override 
+        public void remove() {
+            fastfailCheck();
+            if (!canRemove) {
+                throw new IllegalStateException();
+            }
+            canRemove = false;
+            shiftItems("left", nextIndex - 1);
+            array[rear - 1] = null;
+            iterModCount++;
+            modCount++;
+            nextIndex--;
+            rear--;
+        }
         
-    // }
+    }
 
 }

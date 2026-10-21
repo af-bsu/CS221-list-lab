@@ -36,7 +36,6 @@ public class ListTester {
 	private static final Integer ELEMENT_A = 1;
 	private static final Integer ELEMENT_B = 2;
 	private static final Integer ELEMENT_C = 3;
-	private static final Integer ELEMENT_D = 4;
 	private static final Integer ELEMENT_X = -1;//element that should appear in no lists
 	private static final Integer ELEMENT_Z = -2;//element that should appear in no lists
 
@@ -82,14 +81,11 @@ public class ListTester {
 			if (arg.equalsIgnoreCase("-m"))
 				printSectionSummaries = false;
 		}
-		switch (LIST_TO_USE) {
-		case doubleLinkedList:
-			SUPPORTS_LIST_ITERATOR = true;
-			break;
-		default:
-			SUPPORTS_LIST_ITERATOR = false;
-			break;
-		}
+
+		SUPPORTS_LIST_ITERATOR = switch(LIST_TO_USE) {
+			case doubleLinkedList -> true;
+			default -> false;
+		};
 	}
 
 	/** Print test results in a consistent format
@@ -140,16 +136,26 @@ public class ListTester {
 		// One element
 		Integer[] LIST_A = {ELEMENT_A};
 		String STRING_A = "A";
+		Integer[] LIST_B = {ELEMENT_B};
+		String STRING_B = "B";
 
 		// Two elements
 		Integer[] LIST_AB = {ELEMENT_A, ELEMENT_B};
 		String STRING_AB = "AB";
 		Integer[] LIST_BA = {ELEMENT_B, ELEMENT_A};
 		String STRING_BA = "BA";
+		Integer[] LIST_BC = {ELEMENT_B, ELEMENT_C};
+		String STRING_BC = "BC";
+		Integer[] LIST_AC = {ELEMENT_A, ELEMENT_C};
+		String STRING_AC = "AC";
 
 		//Three elements
-		Integer[] LIST_CBA = {ELEMENT_C, ELEMENT_B, ELEMENT_A};
-		String STRING_CBA = "CBA";
+		Integer[] LIST_ACB = {ELEMENT_A, ELEMENT_C, ELEMENT_B};
+		String STRING_ACB = "ACB";
+		Integer[] LIST_CAB = {ELEMENT_C, ELEMENT_A, ELEMENT_B};
+		String STRING_CAB = "CAB";
+		Integer[] LIST_ABC = {ELEMENT_A, ELEMENT_B, ELEMENT_C};
+		String STRING_ABC = "ABC";
 
 		//newly constructed empty list
 		testEmptyList(newList, "newList");
@@ -159,18 +165,32 @@ public class ListTester {
 		testSingleElementList(emptyList_addA_A, "emptyList_addA_A", LIST_A, STRING_A);
 		testSingleElementList(emptyList_add0A_A, "emptyList_add0A_A", LIST_A, STRING_A);
 		//1-element to empty list
+		testEmptyList(A_removeFirst_emptyList, "A_removeFirst_emptyList");
+		testEmptyList(A_removeLast_emptyList, "A_removeLast_emptyList");
+		testEmptyList(A_removeA_emptyList, "A_removeA_emptyList");
+		testEmptyList(A_remove0_emptyList, "A_remove0_emptyList");
+		testEmptyList(A_iterRemoveAfterNextA_emptyList, "A_iterRemoveAfterNextA_emptyList");
 		//1-element to 2-element
 		testTwoElementList(A_addToFrontB_BA, "A_addToFrontB_BA", LIST_BA, STRING_BA);
 		testTwoElementList(A_addToRearB_AB, "A_addToRearB_AB", LIST_AB, STRING_AB);
 		testTwoElementList(A_addAfterBA_AB, "A_addAfterBA_AB", LIST_AB, STRING_AB);
 		testTwoElementList(A_addB_AB, "A_addB_AB", LIST_AB, STRING_AB);
 		testTwoElementList(A_add0B_BA, "A_add0B_BA", LIST_BA, STRING_BA);
+		testTwoElementList(A_add1B_AB, "A_add1B_AB", LIST_AB, STRING_AB);
 		//1-element to changed 1-element via set()
+		testSingleElementList(A_set0B_B, "A_set0B_B", LIST_B, STRING_B);
 		//2-element to 1-element
+		testSingleElementList(AB_iterRemoveAfterNextA_B, "AB_iterRemoveAfterNextA_B", LIST_B, STRING_B);
+		testSingleElementList(AB_iterRemoveAfterNextB_A, "AB_iterRemoveAfterNextB_A", LIST_A, STRING_A);
 		//2-element to 3-element
-		testThreeElementList(BA_addToFrontC_CBA, "BA_addToFrontC_CBA", LIST_CBA, STRING_CBA);
+		testThreeElementList(AB_addToFrontC_CAB, "AB_addToFrontC_CAB", LIST_CAB, STRING_CAB);
+		testThreeElementList(AB_addAfterCA_ACB, "AB_addAfterCA_ACB", LIST_ACB, STRING_ACB);
+		testThreeElementList(AB_addToRearC_ABC, "AB_addToRearC_ABC", LIST_ABC, STRING_ABC);
 		//2-element to changed 2-element via set()
 		//3-element to 2-element
+		testTwoElementList(ABC_iterRemoveAfterNextA_BC, "ABC_iterRemoveAfterNextA_BC", LIST_BC, STRING_BC);
+		testTwoElementList(ABC_iterRemoveAfterNextB_AC, "ABC_iterRemoveAfterNextB_AC", LIST_AC, STRING_AC);
+		testTwoElementList(ABC_iterRemoveAfterNextC_AB, "ABC_iterRemoveAfterNextC_AB", LIST_AB, STRING_AB);
 		//3-element to changed 3-element via set()
 		//Iterator concurrency tests
 		test_IterConcurrency();
@@ -196,27 +216,21 @@ public class ListTester {
 	 */
 	private IndexedUnsortedList<Integer> newList() {
 		IndexedUnsortedList<Integer> listToUse;
-		switch (LIST_TO_USE) {
-		case goodList:
-			listToUse = new GoodList<Integer>();
-			break;
-		case badList:
-			listToUse = new BadList<Integer>();
-			break;
-		case arrayList:
-			listToUse = new IUArrayList<Integer>();
-			break;
-//		case singleLinkedList:
-//			listToUse = new IUSingleLinkedList<Integer>();
-//			break;
-//		case doubleLinkedList:
-//			listToUse = new IUDoubleLinkedList<Integer>();
-//			break;
-		default:
-			listToUse = null;
-		}
+		listToUse = switch(LIST_TO_USE) {
+			case goodList -> new GoodList<>();
+			case badList -> new BadList<>();
+			case arrayList -> new IUArrayList<>();
+			// case singleLinkedList -> new IUSingleLinkedList<>();
+			// case doubleLinkedList -> new IUDoubleLinkedList<>();
+			default -> null;
+		};
 		return listToUse;
 	}
+
+	/////////////////////////
+	// XXX Given scenarios //
+	/////////////////////////
+
 	// The following creates a "lambda" reference that allows us to pass a scenario
 	//  builder method as an argument. You don't need to worry about how it works -
 	//  just make sure each scenario building method has a corresponding Scenario 
@@ -243,21 +257,33 @@ public class ListTester {
 	}
 	private Scenario<Integer> A_addToFrontB_BA = () -> A_addToFrontB_BA();
 
+	/** Scenario: [A] -> iteratorRemoveAfterNextA -> [ ] 
+	 * @return [ ] after iteratorRemoveAfterNextA
+	 */
+	private IndexedUnsortedList<Integer> A_iterRemoveAfterNextA_emptyList() {
+		IndexedUnsortedList<Integer> list = emptyList_addToFrontA_A(); 
+		Iterator<Integer> it = list.iterator();
+		it.next();
+		it.remove();
+		return list;
+	}
+	private Scenario<Integer> A_iterRemoveAfterNextA_emptyList = () -> A_iterRemoveAfterNextA_emptyList();
+
 	///////////////////////////
 	// XXX Student scenarios //
 	///////////////////////////
 
 	// Technically required for full functionality for three element tests
 	// but I wrote it myself so I'll keep it in this category
-	/** Scenario: [B,A] -> addToFront(C) -> [C,B,A]
-	 * @return [C,B,A] after addToFront(C)
+	/** Scenario: [A,B] -> addToFront(C) -> [C,A,B]
+	 * @return [C,A,B] after addToFront(C)
 	 */
-	private IndexedUnsortedList<Integer> BA_addToFrontC_CBA() {
-		IndexedUnsortedList<Integer> list = A_addToFrontB_BA();
+	private IndexedUnsortedList<Integer> AB_addToFrontC_CAB() {
+		IndexedUnsortedList<Integer> list = A_addToRearB_AB();
 		list.addToFront(ELEMENT_C);
 		return list;
 	}
-	private Scenario<Integer> BA_addToFrontC_CBA = () -> BA_addToFrontC_CBA();
+	private Scenario<Integer> AB_addToFrontC_CAB = () -> AB_addToFrontC_CAB();
 
 	/** Scenario: [] -> addToRear(A) -> [A]
 	 * @return [A] after addToRear(A)
@@ -329,6 +355,150 @@ public class ListTester {
 	}
 	private Scenario<Integer> A_add0B_BA = () -> A_add0B_BA();
 
+	/** Scenario: [A] -> add(1,B) -> [A,B]
+	 * @return [A,B] after add(1,B)
+	 */
+	private IndexedUnsortedList<Integer> A_add1B_AB() {
+		IndexedUnsortedList<Integer> list = emptyList_addToFrontA_A();
+		list.add(1,ELEMENT_B);
+		return list;
+	}
+	private Scenario<Integer> A_add1B_AB = () -> A_add1B_AB();
+
+	/** Scenario: [A] -> removeFirst() -> []
+	 * @return [] after removeFirst()
+	 */
+	private IndexedUnsortedList<Integer> A_removeFirst_emptyList() {
+		IndexedUnsortedList<Integer> list = emptyList_addToFrontA_A();
+		list.removeFirst();
+		return list;
+	}
+	private Scenario<Integer> A_removeFirst_emptyList = () -> A_removeFirst_emptyList();
+
+	/** Scenario: [A] -> removeLast() -> []
+	 * @return [] after removeLast()
+	 */
+	private IndexedUnsortedList<Integer> A_removeLast_emptyList() {
+		IndexedUnsortedList<Integer> list = emptyList_addToFrontA_A();
+		list.removeLast();
+		return list;
+	}
+	private Scenario<Integer> A_removeLast_emptyList = () -> A_removeLast_emptyList();
+
+	/** Scenario: [A] -> remove(A) -> []
+	 * @return [] after remove(A)
+	 */
+	private IndexedUnsortedList<Integer> A_removeA_emptyList() {
+		IndexedUnsortedList<Integer> list = emptyList_addToFrontA_A();
+		list.remove(ELEMENT_A);
+		return list;
+	}
+	private Scenario<Integer> A_removeA_emptyList = () -> A_removeA_emptyList();
+
+	/** Scenario: [A] -> remove(0) -> []
+	 * @return [] after remove(0)
+	 */
+	private IndexedUnsortedList<Integer> A_remove0_emptyList() {
+		IndexedUnsortedList<Integer> list = emptyList_addToFrontA_A();
+		list.remove(0);
+		return list;
+	}
+	private Scenario<Integer> A_remove0_emptyList = () -> A_remove0_emptyList();
+
+	/** Scenario: [A] -> set(0,B) -> [B]
+	 * @return [B] after set(0,B)
+	 */
+	private IndexedUnsortedList<Integer> A_set0B_B() {
+		IndexedUnsortedList<Integer> list = emptyList_addToFrontA_A();
+		list.set(0,ELEMENT_B);
+		return list;
+	}
+	private Scenario<Integer> A_set0B_B = () -> A_set0B_B();
+
+	/** Scenario: [A,B] -> addAfter(C,A) -> [A,C,B]
+	 * @return [A,C,B] after addAfter(C,A)
+	 */
+	private IndexedUnsortedList<Integer> AB_addAfterCA_ACB() {
+		IndexedUnsortedList<Integer> list = A_addToRearB_AB();
+		list.addAfter(ELEMENT_C, ELEMENT_A);
+		return list;
+	}
+	private Scenario<Integer> AB_addAfterCA_ACB = () -> AB_addAfterCA_ACB();
+
+	/** Scenario: [A,B] -> addToRear(C) -> [A,B,C]
+	 * @return [A,B,C] after addToRear(C)
+	 */
+	private IndexedUnsortedList<Integer> AB_addToRearC_ABC() {
+		IndexedUnsortedList<Integer> list = A_addToRearB_AB();
+		list.addToRear(ELEMENT_C);
+		return list;
+	}
+	private Scenario<Integer> AB_addToRearC_ABC = () -> AB_addToRearC_ABC();
+
+	/** Scenario: [A,B] -> iteratorRemoveAfterNextA -> [B]
+	 * @return [B] after iteratorRemoveAfterNextA
+	 */
+	private IndexedUnsortedList<Integer> AB_iterRemoveAfterNextA_B() {
+		IndexedUnsortedList<Integer> list = A_addToRearB_AB();
+		Iterator<Integer> it = list.iterator();
+		it.next();
+		it.remove();
+		return list;
+	}
+	private Scenario<Integer> AB_iterRemoveAfterNextA_B = () -> AB_iterRemoveAfterNextA_B();
+
+	/** Scenario: [A,B] -> iteratorRemoveAfterNextB -> [A]
+	 * @return [A] after iteratorRemoveAfterNextB
+	 */
+	private IndexedUnsortedList<Integer> AB_iterRemoveAfterNextB_A() {
+		IndexedUnsortedList<Integer> list = A_addToRearB_AB();
+		Iterator<Integer> it = list.iterator();
+		it.next();
+		it.next();
+		it.remove();
+		return list;
+	}
+	private Scenario<Integer> AB_iterRemoveAfterNextB_A = () -> AB_iterRemoveAfterNextB_A();
+
+	/** Scenario: [A,B,C] -> iteratorRemoveAfterNextA -> [B,C]
+	 * @return [B,C] after iteratorRemoveAfterNextA
+	 */
+	private IndexedUnsortedList<Integer> ABC_iterRemoveAfterNextA_BC() {
+		IndexedUnsortedList<Integer> list = AB_addToRearC_ABC();
+		Iterator<Integer> it = list.iterator();
+		it.next();
+		it.remove();
+		return list;
+	}
+	private Scenario<Integer> ABC_iterRemoveAfterNextA_BC = () -> ABC_iterRemoveAfterNextA_BC();
+
+	/** Scenario: [A,B,C] -> iteratorRemoveAfterNextB -> [A,C]
+	 * @return [A,C] after iteratorRemoveAfterNextB
+	 */
+	private IndexedUnsortedList<Integer> ABC_iterRemoveAfterNextB_AC() {
+		IndexedUnsortedList<Integer> list = AB_addToRearC_ABC();
+		Iterator<Integer> it = list.iterator();
+		it.next();
+		it.next();
+		it.remove();
+		return list;
+	}
+	private Scenario<Integer> ABC_iterRemoveAfterNextB_AC = () -> ABC_iterRemoveAfterNextB_AC();
+
+	/** Scenario: [A,B,C] -> iteratorRemoveAfterNextC -> [A,B]
+	 * @return [A,B] after iteratorRemoveAfterNextC
+	 */
+	private IndexedUnsortedList<Integer> ABC_iterRemoveAfterNextC_AB() {
+		IndexedUnsortedList<Integer> list = AB_addToRearC_ABC();
+		Iterator<Integer> it = list.iterator();
+		it.next();
+		it.next();
+		it.next();
+		it.remove();
+		return list;
+	}
+	private Scenario<Integer> ABC_iterRemoveAfterNextC_AB = () -> ABC_iterRemoveAfterNextC_AB();
+
 	/////////////////////////////////
 	//XXX Tests for 0-element list
 	/////////////////////////////////
@@ -337,6 +507,7 @@ public class ListTester {
 	 * @param scenario lambda reference to scenario builder method
 	 * @param scenarioName name of the scenario being tested
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private void testEmptyList(Scenario<Integer> scenario, String scenarioName) {
 		System.out.printf("\nSCENARIO: %s\n\n", scenarioName);
 		try {
@@ -396,6 +567,7 @@ public class ListTester {
 	 * @param contents elements expected in the list after scenario has been set up
 	 * @param contentsString contains character labels corresponding to values in contents
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private void testSingleElementList(Scenario<Integer> scenario, String scenarioName, Integer[] contents, String contentsString) {
 		System.out.printf("\nSCENARIO: %s\n\n", scenarioName);
 		try {
@@ -469,6 +641,7 @@ public class ListTester {
 	 * @param contents elements expected in the list after scenario has been set up
 	 * @param contentsString contains character labels corresponding to values in contents 
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private void testTwoElementList(Scenario<Integer> scenario, String scenarioName, Integer[] contents, String contentsString) {
 		System.out.printf("\nSCENARIO: %s\n\n", scenarioName);
 		try {
@@ -558,6 +731,7 @@ public class ListTester {
 	 * @param contents elements expected in the list after scenario has been set up
 	 * @param contentsString contains character labels corresponding to values in contents 
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private void testThreeElementList(Scenario<Integer> scenario, String scenarioName, Integer[] contents, String contentsString) {
 		System.out.printf("\nSCENARIO: %s\n\n", scenarioName);
 		try {
@@ -662,6 +836,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testRemoveFirst(IndexedUnsortedList<Integer> list, Integer expectedElement, Result expectedResult) {
 		Result result;
 		try {
@@ -687,6 +862,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testRemoveLast(IndexedUnsortedList<Integer> list, Integer expectedElement, Result expectedResult) {
 		Result result;
 		try {
@@ -712,6 +888,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testRemoveElement(IndexedUnsortedList<Integer> list, Integer element, Result expectedResult) {
 		Result result;
 		try {
@@ -737,6 +914,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testFirst(IndexedUnsortedList<Integer> list, Integer expectedElement, Result expectedResult) {
 		Result result;
 		try {
@@ -762,6 +940,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testLast(IndexedUnsortedList<Integer> list, Integer expectedElement, Result expectedResult) {
 		Result result;
 		try {
@@ -787,6 +966,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testContains(IndexedUnsortedList<Integer> list, Integer element, Result expectedResult) {
 		Result result;
 		try {
@@ -808,6 +988,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+    @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testIsEmpty(IndexedUnsortedList<Integer> list, Result expectedResult) {
 		Result result;
 		try {
@@ -829,6 +1010,7 @@ public class ListTester {
 	 * @param expectedSize
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testSize(IndexedUnsortedList<Integer> list, int expectedSize) {
 		try {
 			return (list.size() == expectedSize);
@@ -845,6 +1027,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testToString(IndexedUnsortedList<Integer> list, Result expectedResult) {
 		Result result;
 		try {
@@ -900,6 +1083,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testAddToRear(IndexedUnsortedList<Integer> list, Integer element, Result expectedResult) {
 		Result result;
 		try {
@@ -920,6 +1104,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testAddAfter(IndexedUnsortedList<Integer> list, Integer target, Integer element, Result expectedResult) {
 		Result result;
 		try {
@@ -942,6 +1127,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testAddAtIndex(IndexedUnsortedList<Integer> list, int index, Integer element, Result expectedResult) {
 		Result result;
 		try {
@@ -963,6 +1149,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testAdd(IndexedUnsortedList<Integer> list, Integer element, Result expectedResult) {
 		Result result;
 		try {
@@ -985,6 +1172,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testSet(IndexedUnsortedList<Integer> list, int index, Integer element, Result expectedResult) {
 		Result result;
 		try {
@@ -1007,6 +1195,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testGet(IndexedUnsortedList<Integer> list, int index, Integer expectedElement, Result expectedResult) {
 		Result result;
 		try {
@@ -1033,6 +1222,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testRemoveIndex(IndexedUnsortedList<Integer> list, int index, Integer expectedElement, Result expectedResult) {
 		Result result;
 		try {
@@ -1058,6 +1248,7 @@ public class ListTester {
 	 * @param expectedIndex
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testIndexOf(IndexedUnsortedList<Integer> list, Integer element, int expectedIndex) {
 		try {
 			return list.indexOf(element) == expectedIndex;
@@ -1077,6 +1268,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testIter(IndexedUnsortedList<Integer> list, Result expectedResult) {
 		Result result;
 		try {
@@ -1096,6 +1288,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testIterHasNext(Iterator<Integer> iterator, Result expectedResult) {
 		Result result;
 		try {
@@ -1120,6 +1313,7 @@ public class ListTester {
 	 * @param expectedResult MatchingValue or expected exception
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testIterNext(Iterator<Integer> iterator, Integer expectedValue, Result expectedResult) {
 		Result result;
 		try {
@@ -1146,6 +1340,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testIterRemove(Iterator<Integer> iterator, Result expectedResult) {
 		Result result;
 		try {
@@ -1168,6 +1363,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testIterConcurrent(IndexedUnsortedList<Integer> list, Result expectedResult) {
 		Result result;
 		try {
@@ -1222,6 +1418,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIter(IndexedUnsortedList<Integer> list, Result expectedResult) {
 		Result result;
 		try {
@@ -1244,6 +1441,7 @@ public class ListTester {
 	 * @param startingIndex
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIter(IndexedUnsortedList<Integer> list, int startingIndex, Result expectedResult) {
 		Result result;
 		try {
@@ -1267,6 +1465,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIterHasPrevious(ListIterator<Integer> iterator, Result expectedResult) {
 		Result result;
 		try {
@@ -1291,6 +1490,7 @@ public class ListTester {
 	 * @param expectedResult MatchingValue or expected exception
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIterPrevious(ListIterator<Integer> iterator, Integer expectedValue, Result expectedResult) {
 		Result result;
 		try {
@@ -1318,6 +1518,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIterAdd(ListIterator<Integer> iterator, Integer element, Result expectedResult) {
 		Result result;
 		try {
@@ -1339,6 +1540,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+	@SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIterSet(ListIterator<Integer> iterator, Integer element, Result expectedResult) {
 		Result result;
 		try {
@@ -1362,6 +1564,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIterNextIndex(ListIterator<Integer> iterator, int expectedIndex, Result expectedResult) {
 		Result result;
 		try {
@@ -1387,6 +1590,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIterPreviousIndex(ListIterator<Integer> iterator, int expectedIndex, Result expectedResult) {
 		Result result;
 		try {
@@ -1411,6 +1615,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIterConcurrent(IndexedUnsortedList<Integer> list, Result expectedResult) {
 		Result result;
 		try {
@@ -1434,6 +1639,7 @@ public class ListTester {
 	 * @param expectedResult
 	 * @return test success
 	 */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private boolean testListIterConcurrent(IndexedUnsortedList<Integer> list, int index1, int index2, Result expectedResult) {
 		Result result;
 		try {
@@ -1495,6 +1701,7 @@ public class ListTester {
 	////////////////////////////////////////////////////////
 
 	/** run Iterator concurrency tests */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private void test_IterConcurrency() {
 		System.out.println("\nIterator Concurrency Tests\n");		
 		try {
@@ -1815,6 +2022,7 @@ public class ListTester {
 	////////////////////////////////////////////////////////
 
 	/** run ListIterator concurrency tests */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private void test_ListIterConcurrency() {
 		System.out.println("\nListIterator Concurrency Tests\n");
 		try {
