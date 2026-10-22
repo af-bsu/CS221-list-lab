@@ -33,7 +33,7 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
      * Public constructor using a user-defined array capacity via integer parameter.
      * 
      * @param initialCapacity starting length of the array
-     * @throws IllegalArgumentException if the provided initial capacity will cause an unusable array
+     * @throws IllegalArgumentException if the provided initial capacity will create an unusable array
      */
     @SuppressWarnings("unchecked")
     public IUArrayList(int initialCapacity) {

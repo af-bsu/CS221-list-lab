@@ -20,7 +20,7 @@ public class ListTester {
 		goodList, badList, arrayList, singleLinkedList, doubleLinkedList
 	};
 	// TODO: THIS IS WHERE YOU CHOOSE WHICH LIST TO TEST
-	private final static ListToUse LIST_TO_USE = ListToUse.arrayList;
+	private final static ListToUse LIST_TO_USE = ListToUse.singleLinkedList;
 
 	// possible results expected in tests
 	private enum Result {
@@ -220,7 +220,7 @@ public class ListTester {
 			case goodList -> new GoodList<>();
 			case badList -> new BadList<>();
 			case arrayList -> new IUArrayList<>();
-			// case singleLinkedList -> new IUSingleLinkedList<>();
+			case singleLinkedList -> new IUSingleLinkedList<>();
 			// case doubleLinkedList -> new IUDoubleLinkedList<>();
 			default -> null;
 		};
