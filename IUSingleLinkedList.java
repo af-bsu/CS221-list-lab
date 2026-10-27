@@ -54,6 +54,7 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
             targetNode = targetNode.getNext();
         }
 
+        // Case: target not found
         if (targetNode == null) {
             throw new NoSuchElementException();
         }
@@ -63,6 +64,7 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
         targetNode.setNext(newNode);
         newNode.setElement(element);
 
+        // Special case: adding after tail
         if (targetNode == tail) {
             tail = newNode;
         }
@@ -76,11 +78,34 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException();
         }
-        throw new UnsupportedOperationException("Not supported yet.");
+
+        int currentIndex = 0;
+        Node<T> prevNode = head;
+
+        Node<T> newNode = new Node<T>(element);
+        // Case: adding at index 0
+        if (index == 0) {
+            newNode.setNext(head);
+            head = newNode;
+        } else {
+            while (currentIndex < index - 1) {
+                prevNode = prevNode.getNext();
+                currentIndex++;
+            }
+        }
+
+        // Case: adding at tail
+        if (prevNode.getNext() == tail) {
+            newNode.setNext(prevNode.getNext());
+        }
+
     }
 
     @Override
     public T removeFirst() {
+        if (isEmpty()) {
+            throw new NoSuchElementException();
+        }
         T returnElement = head.getElement();
         head = head.getNext();
         return returnElement;
@@ -88,7 +113,27 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public T removeLast() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (isEmpty()) {
+            throw new NoSuchElementException();
+        }
+
+        T returnElement = tail.getElement();
+        if (size > 2) {
+            Node<T> prevPrevNode = head;
+            while (prevPrevNode.getNext().getNext() != tail) {
+                prevPrevNode = prevPrevNode.getNext();
+            }
+            tail = prevPrevNode.getNext();
+            prevPrevNode.getNext().setNext(null);
+        } else if (size == 2) {
+            tail = head;
+            head.setNext(null);
+        } else {
+            head = null;
+            tail = null;
+        }
+
+        return returnElement;
     }
 
     @Override
@@ -131,17 +176,67 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public T remove(int index) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        // Case: removing index 0
+        if (index == 0) {
+            head = head.getNext();
+        }
+
+        int currentIndex = 0;
+        Node<T> prevNode = head;
+        Node<T> currentNode = head.getNext();
+        while (currentIndex < index && currentNode.getNext() != null) {
+            prevNode = prevNode.getNext();
+            currentNode = currentNode.getNext();
+            currentIndex++;
+        }
+
+        T returnElement = prevNode.getElement();
+
+        // Case: removing tail
+        if (currentNode == tail) {
+            tail = prevNode;
+            prevNode.setNext(null);
+        }
+
+        prevNode.setNext(currentNode.getNext());
+
+        return returnElement;
     }
 
     @Override
     public void set(int index, T element) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        int currentIndex = 0;
+        Node<T> currentNode = head;
+        while (currentIndex < index) {
+            currentNode = currentNode.getNext();
+            currentIndex++;
+        }
+
+        currentNode.setElement(element);
     }
 
     @Override
     public T get(int index) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        int currentIndex = 0;
+        Node<T> currentNode = head;
+        while (currentIndex < index) {
+            currentNode = currentNode.getNext();
+            currentIndex++;
+        }
+
+        return currentNode.getElement();
     }
 
     @Override
