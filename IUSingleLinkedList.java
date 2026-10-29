@@ -99,6 +99,8 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
             newNode.setNext(prevNode.getNext());
         }
 
+        size++;
+        modCount++;
     }
 
     @Override
@@ -108,6 +110,9 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
         }
         T returnElement = head.getElement();
         head = head.getNext();
+
+        size--;
+        modCount++;
         return returnElement;
     }
 
@@ -133,6 +138,8 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
             tail = null;
         }
 
+        size--;
+        modCount++;
         return returnElement;
     }
 
@@ -141,7 +148,7 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
         if (isEmpty()) {
             throw new NoSuchElementException();
         }
-        
+
         T returnElement;
         if (head.getElement().equals(element)) {
             returnElement = head.getElement();
@@ -171,6 +178,8 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
             }
         }
 
+        size--;
+        modCount++;
         return returnElement;
     }
 
@@ -180,30 +189,37 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
             throw new IndexOutOfBoundsException();
         }
 
-        // Case: removing index 0
+        T returnElement;
+
+        // Case: removing head
         if (index == 0) {
+            returnElement = head.getElement();
             head = head.getNext();
+            return returnElement;
         }
 
+        // All other cases
         int currentIndex = 0;
         Node<T> prevNode = head;
         Node<T> currentNode = head.getNext();
-        while (currentIndex < index && currentNode.getNext() != null) {
-            prevNode = prevNode.getNext();
+        while (currentNode != null && currentIndex < index) {
+            prevNode = currentNode;
             currentNode = currentNode.getNext();
             currentIndex++;
         }
 
-        T returnElement = prevNode.getElement();
+        returnElement = prevNode.getElement();
 
         // Case: removing tail
         if (currentNode == tail) {
             tail = prevNode;
             prevNode.setNext(null);
+        } else {
+            prevNode.setNext(currentNode.getNext());
         }
 
-        prevNode.setNext(currentNode.getNext());
-
+        size--;
+        modCount++;
         return returnElement;
     }
 
@@ -221,6 +237,7 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
         }
 
         currentNode.setElement(element);
+        modCount++;
     }
 
     @Override
@@ -229,6 +246,17 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
             throw new IndexOutOfBoundsException();
         }
 
+        // Quick exit for getting first index (head)
+        if (index == 0) {
+            return head.getElement();
+        }
+
+        // Quick exit for getting last index (tail)
+        if (index == size - 1) {
+            return tail.getElement();
+        }
+
+        // All other cases
         int currentIndex = 0;
         Node<T> currentNode = head;
         while (currentIndex < index) {
@@ -241,21 +269,35 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public int indexOf(T element) {
-        int index = 0;
+        int foundIndex = NOT_FOUND;
+        int currentIndex = 0;
         Node<T> currentNode = head;
-        while (index < size && currentNode != element) {
-            currentNode = currentNode.getNext();
+        while (currentIndex < size && foundIndex == NOT_FOUND) {
+            if (currentNode == null) {
+                break; // Exit out of loop if null node, guarantees returning NOT_FOUND (-1)
+            }
+            if (currentNode.getElement().equals(element)) {
+                foundIndex = currentIndex;
+            } else {
+                currentNode = currentNode.getNext();
+            }
         }
-        return index;
+        return foundIndex;
     }
 
     @Override
     public T first() {
+        if (isEmpty()) {
+            throw new NoSuchElementException();
+        }
         return head.getElement();
     }
 
     @Override
     public T last() {
+        if (isEmpty()) {
+            throw new NoSuchElementException();
+        }
         return tail.getElement();
     }
 
