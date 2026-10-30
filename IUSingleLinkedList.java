@@ -4,25 +4,62 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 /**
- * 
- * IUSingleLinkedList
+ * A single-linked-node-based implementation of the
+ * IndexedUnsortedList interface. Does not support
+ * ListIterator.
  * @param <T>
+ * @author Amira Freeman
  */
 public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
     private Node<T> head, tail;
     private int size, modCount;
     private final int NOT_FOUND = -1;
 
+    /**
+     * Public constructor for creating a single-linked list.
+     */
     public IUSingleLinkedList() {
         size = 0;
         head = null;
         tail = null;
     }
 
+    /**
+     * Many of the public methods require the list to have
+     * at least one element. If the list is empty, the
+     * method cannot continue, and throws a NoSuchElementException.
+     * 
+     * @throws NoSuchElementException if the list is empty
+     */
+    private void checkForEmptyList() {
+        if (isEmpty()) {
+            throw new NoSuchElementException();
+        }
+    }
+
+    /**
+     * Many of the public methods require their given parameters
+     * to fit a certain range, and when given an index, if the
+     * index is less than zero or is greater than or equal to
+     * the numerical size of the list, then the method cannot
+     * continue and throws an IndexOutOfBoundsException.
+     * 
+     * @param index to ensure is within the bounds of the list
+     * @throws IndexOutOfBoundsException if the given index is not usable
+     */
+    private void checkGivenBounds(int index) {
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException();
+        }
+    }
+
     @Override
     public void addToFront(T element) {
         Node<T> newNode = new Node<>(element);
         newNode.setNext(head);
+        if (head == null) { // Special case: empty list
+            tail = newNode;
+        }
         head = newNode;
         size++;
         modCount++;
@@ -75,47 +112,51 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public void add(int index, T element) {
-        if (index < 0 || index >= size) {
+        // This method is NOT suitable for using checkGivenBounds()
+        if (index < 0 || index > size) {
             throw new IndexOutOfBoundsException();
         }
 
-        int currentIndex = 0;
-        Node<T> prevNode = head;
-
-        Node<T> newNode = new Node<T>(element);
-        // Case: adding at index 0
-        if (index == 0) {
-            newNode.setNext(head);
-            head = newNode;
-        } else {
-            while (currentIndex < index - 1) {
-                prevNode = prevNode.getNext();
-                currentIndex++;
+        Node<T> newNode = new Node<>(element);
+        // Case: adding after an existent tail
+        if (index == size && tail != null) {
+            tail.setNext(newNode);
+            tail = newNode;
+        } else { // All other cases
+            int currentIndex = 0;
+            Node<T> prevNode = head;
+            // Case: adding at head
+            if (index == 0) {
+                newNode.setNext(head);
+                head = newNode;
+                if (size == 0) { // Special case: adding to an empty list
+                    tail = newNode;
+                }
+            } else {
+                while (currentIndex < index - 1) {
+                    prevNode = prevNode.getNext();
+                    currentIndex++;
+                }
             }
         }
 
-        // Case: adding at tail
-        if (prevNode.getNext() == tail) {
-            newNode.setNext(prevNode.getNext());
-        }
-
+        size++;
+        modCount++;
     }
 
     @Override
     public T removeFirst() {
-        if (isEmpty()) {
-            throw new NoSuchElementException();
-        }
+        checkForEmptyList();
         T returnElement = head.getElement();
         head = head.getNext();
+        size--;
+        modCount++;
         return returnElement;
     }
 
     @Override
     public T removeLast() {
-        if (isEmpty()) {
-            throw new NoSuchElementException();
-        }
+        checkForEmptyList();
 
         T returnElement = tail.getElement();
         if (size > 2) {
@@ -133,14 +174,14 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
             tail = null;
         }
 
+        size--;
+        modCount++;
         return returnElement;
     }
 
     @Override
     public T remove(T element) {
-        if (isEmpty()) {
-            throw new NoSuchElementException();
-        }
+        checkForEmptyList();
         
         T returnElement;
         if (head.getElement().equals(element)) {
@@ -171,47 +212,51 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
             }
         }
 
+        size--;
+        modCount++;
         return returnElement;
     }
 
     @Override
     public T remove(int index) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkGivenBounds(index);
 
-        // Case: removing index 0
+        T returnElement;
+
+        // Case: removing head
         if (index == 0) {
+            returnElement = head.getElement();
             head = head.getNext();
+            if (head == null) { // List is now empty
+                tail = null;
+            }
+            size--;
+            modCount++;
+            return returnElement;
         }
 
-        int currentIndex = 0;
         Node<T> prevNode = head;
-        Node<T> currentNode = head.getNext();
-        while (currentIndex < index && currentNode.getNext() != null) {
+        for (int i = 0; i < index - 1; i++) {
             prevNode = prevNode.getNext();
-            currentNode = currentNode.getNext();
-            currentIndex++;
         }
+        Node<T> currentNode = prevNode.getNext();
+        returnElement = currentNode.getElement();
 
-        T returnElement = prevNode.getElement();
+        prevNode.setNext(currentNode.getNext());
 
         // Case: removing tail
         if (currentNode == tail) {
             tail = prevNode;
-            prevNode.setNext(null);
         }
 
-        prevNode.setNext(currentNode.getNext());
-
+        size--;
+        modCount++;
         return returnElement;
     }
 
     @Override
     public void set(int index, T element) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkGivenBounds(index);
 
         int currentIndex = 0;
         Node<T> currentNode = head;
@@ -220,14 +265,13 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
             currentIndex++;
         }
 
+        modCount++;
         currentNode.setElement(element);
     }
 
     @Override
     public T get(int index) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException();
-        }
+        checkGivenBounds(index);
 
         int currentIndex = 0;
         Node<T> currentNode = head;
@@ -241,21 +285,29 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public int indexOf(T element) {
-        int index = 0;
+        int foundIndex = NOT_FOUND;
+        int currentIndex = 0;
         Node<T> currentNode = head;
-        while (index < size && currentNode != element) {
-            currentNode = currentNode.getNext();
+        while (currentIndex < size && foundIndex == NOT_FOUND && currentNode != null) {
+            if (currentNode.getElement().equals(element)) {
+                foundIndex = currentIndex;
+            } else {
+                currentNode = currentNode.getNext();
+            }
+            currentIndex++;
         }
-        return index;
+        return foundIndex;
     }
 
     @Override
     public T first() {
+        checkForEmptyList();
         return head.getElement();
     }
 
     @Override
     public T last() {
+        checkForEmptyList();
         return tail.getElement();
     }
 
@@ -287,6 +339,25 @@ public class IUSingleLinkedList<T> implements IndexedUnsortedList<T> {
     @Override
     public ListIterator<T> listIterator(int startingIndex) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public String toString() {
+        if (isEmpty()) { // No need to build a string if the list is empty
+            return "[ ]";
+        }
+
+        StringBuilder builder = new StringBuilder("[ ");
+        Node<T> currentNode = head;
+        while (currentNode != null) {
+            builder.append(currentNode.getElement());
+            builder.append(", ");
+            currentNode = currentNode.getNext();
+        }
+        builder.delete(builder.length() - 2, builder.length() - 1); // Remove trailing comma
+        builder.append("]");
+
+        return builder.toString();
     }
 
     private class SLLIterator implements Iterator<T> {
