@@ -13,8 +13,7 @@ public class Node<E> {
   	 * Creates an empty node.
   	 */
 	public Node() {
-		prev = null;
-		next = null;
+		prev = next = null;
 		element = null;
 	}
 
@@ -25,8 +24,7 @@ public class Node<E> {
   	 *            the element to be stored within the new node
   	 */
 	public Node(E elem) {
-		prev = null;
-		next = null;
+		prev = next = null;
 		element = elem;
 	}
 
