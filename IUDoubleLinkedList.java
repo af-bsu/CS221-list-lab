@@ -63,13 +63,22 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
             throw new NoSuchElementException();
         }
 
+        // TODO Add all references
         Node<T> newNode = new Node<>(element);
+        if (currentNode != head && currentNode != tail) {
+            newNode.setNext(currentNode.getNext());
+            currentNode.setNext(newNode);
+            newNode.setPrev(currentNode);
+            newNode.getNext().setPrev(newNode);
+        } else if (head == tail) {
+
+        }
     }
 
     @Override
     public void add(int index, T element) {
         if (index < 0 || index > size) {
-
+            throw new IndexOutOfBoundsException();
         }
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'add'");
@@ -106,8 +115,32 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
         if (isEmpty()) {
             throw new NoSuchElementException();
         }
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'remove'");
+
+        Node<T> currentNode = head;
+        while (currentNode != null && !currentNode.getElement().equals(element)) {
+            currentNode = currentNode.getNext();
+        }
+        if (currentNode == null) {
+            throw new NoSuchElementException();
+        }
+
+        T returnElement = currentNode.getElement();
+
+        // Remove all references pointing to currentNode so it will be trashed by Java's garbage collector
+        if (currentNode != head && currentNode != tail) { // Case: at least three elements and not removing head or tail
+            currentNode.getPrev().setNext(currentNode.getNext());
+            currentNode.getNext().setPrev(currentNode.getPrev());
+        } else if (head == tail) { // Case: only one element
+            head = tail = null;
+        } else if (currentNode == head) { // Case: more than one element and removing head
+            head = currentNode.getNext();
+            currentNode.getNext().setPrev(null);
+        } else { // Case: more than one element and removing tail
+            tail = currentNode.getPrev();
+            currentNode.getPrev().setNext(null);
+        }
+
+        return returnElement;
     }
 
     @Override
@@ -115,8 +148,28 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException();
         }
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'remove'");
+        
+        Node<T> currentNode = head;
+        for (int i = 0; i < index; i++) {
+            currentNode = currentNode.getNext();
+        }
+
+        T returnElement = currentNode.getElement();
+        // Remove all references pointing to currentNode so it will be trashed by Java's garbage collector
+        if (currentNode != head && currentNode != tail) { // Case: at least three elements and not removing head or tail
+            currentNode.getPrev().setNext(currentNode.getNext());
+            currentNode.getNext().setPrev(currentNode.getPrev());
+        } else if (head == tail) { // Case: only one element
+            head = tail = null;
+        } else if (currentNode == head) { // Case: more than one element and removing head
+            head = currentNode.getNext();
+            currentNode.getNext().setPrev(null);
+        } else { // Case: more than one element and removing tail
+            tail = currentNode.getPrev();
+            currentNode.getPrev().setNext(null);
+        }
+
+        return returnElement;
     }
 
     @Override
@@ -196,49 +249,65 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
 
     @Override
     public Iterator<T> iterator() {
-        return new DLLListIterator();
+        return new DLLIterator();
     }
 
     @Override
     public ListIterator<T> listIterator() {
-        return new DLLListIterator();
+        return new DLLIterator();
     }
 
     @Override
     public ListIterator<T> listIterator(int startingIndex) {
-        return new DLLListIterator(startingIndex);
+        return new DLLIterator(startingIndex);
     }
 
-    private class DLLListIterator implements ListIterator<T> {
+    private class DLLIterator implements ListIterator<T> {
         private int nextIndex, iterModCount;
-        private Node<T> nextNode;
+        private Node<T> nextNode, lastReturnedNode;
 
         /**
          * Initialize an iterator before the first element at head.
          */
-        public DLLListIterator() {
-            nextNode = head;
-            nextIndex = 0;
-            iterModCount = modCount;
+        public DLLIterator() {
+            this(0);
         }
 
         /**
          * Initialize an iterator before a certain point in the list.
          * @param startingIndex
          */
-        public DLLListIterator(int startingIndex) {
-            if (startingIndex < 0 || startingIndex > size) {
+        public DLLIterator(int startingIndex) {
+            if (startingIndex < 0 || startingIndex >= size) {
                 throw new IndexOutOfBoundsException();
             }
 
-            if (startingIndex < ((float)size / 2)) {
-                
+            // TODO Fast nav to startingNode
+            Node<T> startingNode;
+            if (startingIndex == 0) {
+                nextNode = head;
+            } else {
+                if (startingIndex <= ((float)size / 2)) {
+                    startingNode = head;
+                    
+                }
             }
 
             nextIndex = startingIndex;
             iterModCount = modCount;
         }
 
+        /**
+         * Before any method should execute its intended program, it
+         * must first check that the list that it is reporting is still
+         * accurately reflected to the list the iterator promised to
+         * accurately report on. If it is not, then the iterator
+         * destroys itself and throws a ConcurrentModificationException.
+         * 
+         * @throws ConcurrentModificationException if the list is no
+         *      longer accurate and was modified without the
+         *      iterator's knowledge
+         */
         public void checkForConcurrency() {
             if (iterModCount != modCount) {
                 throw new ConcurrentModificationException();
@@ -254,7 +323,8 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
         @Override
         public boolean hasNext() {
             checkForConcurrency();
-            throw new UnsupportedOperationException("Unimplemented method 'hasNext'");
+            // The only node without a next is tail, this prevents NullPointerException if nextNode is null
+            return nextNode != tail;
         }
 
         @Override
@@ -266,19 +336,23 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
 
         @Override
         public T next() {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'next'");
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            T returnElement = nextNode.getElement();
+            lastReturnedNode = nextNode;
+            nextNode = nextNode.getNext();
+            return returnElement;
         }
 
         @Override
         public int nextIndex() {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'nextIndex'");
+            checkForConcurrency();
+            return nextIndex;
         }
 
         @Override
         public T previous() {
-            checkForConcurrency();
             if (!hasPrevious()) {
                 throw new NoSuchElementException();
             }
@@ -287,25 +361,53 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
             } else {
                 nextNode = tail;
             }
+
             return nextNode.getElement();
         }
 
         @Override
         public int previousIndex() {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'previousIndex'");
+            checkForConcurrency();
+            return (nextIndex - 1);
         }
 
         @Override
         public void remove() {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'remove'");
+            checkForConcurrency();
+            if (lastReturnedNode == null) {
+                throw new IllegalStateException();
+            }
+
+            // Update all references
+            if (lastReturnedNode == tail) {
+                tail = tail.getPrev();
+            } else {
+                lastReturnedNode.getNext().setPrev(lastReturnedNode.getPrev());
+            }
+            if (lastReturnedNode == head) {
+                head = head.getNext();
+                head.setPrev(null);
+            } else {
+                lastReturnedNode.getPrev().setNext(lastReturnedNode.getNext());
+            }
+
+            if (lastReturnedNode == nextNode) {
+                nextNode = nextNode.getNext();
+            }
+
+            size--;
+            modCount++;
+            iterModCount++;
+            lastReturnedNode = null;
         }
 
         @Override
         public void set(T arg0) {
-            // TODO Auto-generated method stub
-            throw new UnsupportedOperationException("Unimplemented method 'set'");
+            checkForConcurrency();
+            if (lastReturnedNode == null) {
+                throw new IllegalStateException();
+            }
+            lastReturnedNode.setElement(arg0);
         }
         
     }
