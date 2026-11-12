@@ -11,7 +11,7 @@ import java.util.NoSuchElementException;
  * @author Amira Freeman
  */
 public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
-    private final int NOT_FOUND = -1;
+    private static final int NOT_FOUND = -1;
     private Node<T> head, tail;
     private int size, modCount;
 
@@ -21,32 +21,62 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
         size = modCount = 0;
     }
 
+    /**
+     * Many public methods require a non-empty list to properly
+     * conduct their function. If a method finds that a list
+     * is empty when it requires a non-empty list, it will throw
+     * a NoSuchElementException.
+     * 
+     * @throws NoSuchElementException when the list is empty
+     */
+    public void checkForEmptyList() {
+        if (isEmpty()) { throw new NoSuchElementException(); }
+    }
+
+    /**
+     * Many public methods require an index parameter to properly
+     * conduct their function. If a method finds that the given
+     * index is outside of the list's bounds, as defined between
+     * 0 and size - 1, then it will throw an IndexOutOfBoundsException.
+     * 
+     * Note that this method is for checking a given index if it is
+     * less than zero, or greater than OR EQUAL TO size. The bound
+     * check for the add(index, element) method therefore cannot use
+     * this check in case a user is adding an element after the tail
+     * element, which this would specifically prevent.
+     * 
+     * @param index to ensure is not less than zero, or greater than or equal to size
+     */
+    public void checkForValidIndexBounds(int index) {
+        if (index < 0 || index >= size) { throw new IndexOutOfBoundsException(); }
+    }
+
+    /**
+     * Some methods are required to find the index of an element,
+     * but if the element is not found using the indexOf() method,
+     * then it will return -1, or NOT_FOUND as represented in this
+     * implementation of IndexedUnsortedList. If that is the case,
+     * then the method which called indexOf() must detect this and
+     * throw a NoSuchElementException to indicate this error.
+     * 
+     * @param element of which to find the index in the list
+     * @throws NoSuchElementException if the element is not found (indexOf returns NOT_FOUND == -1)
+     * @return index number in list if the element is found (indexOf returns any value other than NOT_FOUND)
+     */
+    public int checkForValidFoundIndex(T element) {
+        int index = indexOf(element);
+        if (index == NOT_FOUND) { throw new NoSuchElementException(); }
+        return index;
+    }
+
     @Override
     public void addToFront(T element) {
-        Node<T> newNode = new Node<>(element);
-        if (head == null) { // List is empty
-            head = tail = newNode;
-        } else {
-            newNode.setNext(head);
-            head.setPrev(newNode);
-            head = newNode;
-        }
-        size++;
-        modCount++;
+        add(0, element);
     }
 
     @Override
     public void addToRear(T element) {
-        Node<T> newNode = new Node<>(element);
-        if (head == null) {
-            head = tail = newNode;
-        } else {
-            newNode.setPrev(tail);
-            tail.setNext(newNode);
-            tail = newNode;
-        }
-        size++;
-        modCount++;
+        add(size, element);
     }
 
     @Override
@@ -56,186 +86,60 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
 
     @Override
     public void addAfter(T element, T target) {
-        Node<T> currentNode = head;
-        while (currentNode != null && !currentNode.getElement().equals(target)) {
-            currentNode = currentNode.getNext();
-        }
-        if (currentNode == null) { // Element was not found
-            throw new NoSuchElementException();
-        }
-
-        Node<T> newNode = new Node<>(element);
-        if (currentNode == tail) {
-            newNode.setPrev(tail);
-            tail.setNext(newNode);
-            tail = newNode;
-        } else {
-            newNode.setNext(currentNode.getNext());
-            currentNode.setNext(newNode);
-            newNode.setPrev(currentNode);
-            newNode.getNext().setPrev(newNode);
-        }
-
-        size++;
-        modCount++;
+        int index = checkForValidFoundIndex(target);
+        DLLIterator list = new DLLIterator(index);
+        list.next();
+        list.add(element);
     }
 
     @Override
     public void add(int index, T element) {
-        if (index < 0 || index > size) {
-            throw new IndexOutOfBoundsException();
-        }
-
-        Node<T> newNode = new Node<>(element);
-
-        if (isEmpty()) { // Case: empty list
-            head = tail = newNode;
-        } else if (index == size) { // Case: adding after tail
-            tail.setNext(newNode);
-            newNode.setPrev(tail);
-            tail = newNode;
-        } else if (index == 0) { // Case: adding at head
-            head.setPrev(newNode);
-            newNode.setNext(head);
-            head = newNode;
-        } else {
-            Node<T> prevNode = head;
-            for (int i = 0; i < index - 1; i++) {
-                prevNode = prevNode.getNext();
-            }
-            newNode.setNext(prevNode.getNext());
-            newNode.setPrev(prevNode);
-            prevNode.setNext(newNode);
-            newNode.getNext().setPrev(newNode);
-        }
-
-        size++;
-        modCount++;
+        if (index < 0 || index > size) { throw new IndexOutOfBoundsException(); }
+        DLLIterator list = new DLLIterator(index);
+        list.add(element);
     }
 
     @Override
     public T removeFirst() {
-        if (isEmpty()) {
-            throw new NoSuchElementException();
-        }
-        T element = head.getElement();
-        if (size == 1) { // Case for one-element lists
-            head = tail = null;
-        } else {
-            head = head.getNext();
-            head.setPrev(null);
-        }
-        size--;
-        modCount++;
-        return element;
+        checkForEmptyList();
+        return remove(0);
     }
 
     @Override
     public T removeLast() {
-        if (isEmpty()) {
-            throw new NoSuchElementException();
-        }
-        T element = tail.getElement();
-        if (size == 1) { // Case for one-element lists
-            head = tail = null;
-        } else {
-            tail = tail.getPrev();
-            tail.setNext(null);
-        }
-        size--;
-        modCount++;
-        return element;
+        checkForEmptyList();
+        return remove(size - 1);
     }
 
     @Override
     public T remove(T element) {
-        if (isEmpty()) {
-            throw new NoSuchElementException();
-        }
-
-        Node<T> currentNode = head;
-        while (currentNode != null && !currentNode.getElement().equals(element)) {
-            currentNode = currentNode.getNext();
-        }
-        if (currentNode == null) {
-            throw new NoSuchElementException();
-        }
-
-        T returnElement = currentNode.getElement();
-
-        // Remove all references pointing to currentNode so it will be trashed by Java's garbage collector
-        if (currentNode != head && currentNode != tail) { // Case: at least three elements and not removing head or tail
-            currentNode.getPrev().setNext(currentNode.getNext());
-            currentNode.getNext().setPrev(currentNode.getPrev());
-        } else if (head == tail) { // Case: only one element
-            head = tail = null;
-        } else if (currentNode == head) { // Case: more than one element and removing head
-            head = currentNode.getNext();
-            head.setPrev(null);
-        } else { // Case: more than one element and removing tail
-            tail = currentNode.getPrev();
-            tail.setNext(null);
-        }
-
-        size--;
-        modCount++;
-        return returnElement;
+        checkForEmptyList();
+        int index = checkForValidFoundIndex(element);
+        return remove(index);
     }
 
     @Override
     public T remove(int index) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException();
-        }
-        
-        Node<T> currentNode = head;
-        for (int i = 0; i < index; i++) {
-            currentNode = currentNode.getNext();
-        }
-
-        T returnElement = currentNode.getElement();
-        // Remove all references pointing to currentNode so it will be trashed by Java's garbage collector
-        if (currentNode != head && currentNode != tail) { // Case: at least three elements and not removing head or tail
-            currentNode.getPrev().setNext(currentNode.getNext());
-            currentNode.getNext().setPrev(currentNode.getPrev());
-        } else if (head == tail) { // Case: only one element
-            head = tail = null;
-        } else if (currentNode == head) { // Case: more than one element and removing head
-            head = currentNode.getNext();
-            head.setPrev(null);
-        } else { // Case: more than one element and removing tail
-            tail = currentNode.getPrev();
-            tail.setNext(null);
-        }
-
-        size--;
-        modCount++;
-        return returnElement;
+        checkForValidIndexBounds(index);
+        DLLIterator list = new DLLIterator(index);
+        T element = list.next();
+        list.remove();
+        return element;
     }
 
     @Override
     public void set(int index, T element) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException();
-        }
-        Node<T> currentNode = head;
-        for (int i = 0; i < index; i++) {
-            currentNode = currentNode.getNext();
-        }
-        currentNode.setElement(element);
-        modCount++;
+        checkForValidIndexBounds(index);
+        DLLIterator list = new DLLIterator(index);
+        list.next();
+        list.set(element);
     }
 
     @Override
     public T get(int index) {
-        if (index < 0 || index >= size) {
-            throw new IndexOutOfBoundsException();
-        }
-        Node<T> currentNode = head;
-        for (int i = 0; i < index; i++) {
-            currentNode = currentNode.getNext();
-        }
-        return currentNode.getElement();
+        checkForValidIndexBounds(index);
+        DLLIterator list = new DLLIterator(index);
+        return list.next();
     }
 
     @Override
@@ -256,17 +160,13 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
 
     @Override
     public T first() {
-        if (isEmpty()) {
-            throw new NoSuchElementException();
-        }
+        checkForEmptyList();
         return head.getElement();
     }
 
     @Override
     public T last() {
-        if (isEmpty()) {
-            throw new NoSuchElementException();
-        }
+        checkForEmptyList();
         return tail.getElement();
     }
 
@@ -344,6 +244,8 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
                 nextNode = head; // Quick conditional exit for head
             } else if (startingIndex == size - 1) {
                 nextNode = tail; // Quick conditional exit for tail
+            } else if (startingIndex == size) {
+                nextNode = null; // Quick conditional exit for after tail
             } else { // All other cases
                 int currentIndex = 0;
                 if (startingIndex < (size / 2)) {
@@ -391,19 +293,23 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
 
             if (isEmpty()) { // Case: empty list
                 head = tail = newNode;
+                nextNode = newNode;
             } else if (nextNode == null) { // Case: adding after tail
                 tail.setNext(newNode);
                 newNode.setPrev(tail);
                 tail = newNode;
+                nextNode = newNode;
             } else if (nextNode == head) { // Case: adding at head
                 head.setPrev(newNode);
                 newNode.setNext(head);
                 head = newNode;
-            } else {
+                nextNode = newNode;
+            } else { // All other cases
+                Node<T> prev = nextNode.getPrev(); // For readability of calls
+                newNode.setPrev(prev);
+                newNode.setNext(nextNode);
+                prev.setNext(newNode);
                 nextNode.setPrev(newNode);
-                nextNode.getPrev().setNext(newNode);
-                newNode.setNext(newNode);
-                newNode.setPrev(newNode.getPrev());
             }
 
             size++;
