@@ -225,6 +225,12 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
         return new DLLIterator(startingIndex);
     }
 
+    /**
+     * A class for creating a ListIterator specially designed to
+     * handle double-linked lists.
+     * 
+     * @author Amira Freeman
+     */
     private class DLLIterator implements ListIterator<T> {
         private int nextIndex, iterModCount;
         private Node<T> nextNode, lastReturnedNode;

@@ -1,41 +1,41 @@
 ****************
 * Double-Linked List
 * CS221 / Computer Science II
-* 2026-11-12
+* 2026-11-13
 * Amira Freeman
 **************** 
 
 OVERVIEW:
 
- This program is a double-linked implementation of an indexed
- unsorted list. Instead of a normal indexed array, it uses nodes
- that track their predecessors and successors, with each node
- containing its respective element.
+ This program is a double-linked implementation of an indexed unsorted
+ list. Instead of a normal array-based list, it uses nodes that track
+ their predecessors and successors, with each node containing its
+ respective element.
 
 
 INCLUDED FILES:
 
  * ListTester.java - test class with full implementation of scenarios
  * IUDoubleLinkedList.java - double-linked node implementation of an
-    indexed unsorted list
+      indexed unsorted list
  * IndexedUnsortedList.java - interface class which IUDoubleLinkedList
-    implements
+      implements
  * Node.java - allows creation of nodes and links
  * README - documentation
 
 
 COMPILING AND RUNNING:
 
- The driver class for testing is already configured to test
- the DoubleLinkedList implementation. The program first has
- to be compiled:
+ The driver class for testing is already configured to test the
+ IUDoubleLinkedList implementation. The program first has to be
+ compiled:
  $ javac ListTester.java
 
  The program is run with the command:
  $ java ListTester
 
- There are a few arguments when running the program that will
- change the output and/or formatting of the tests:
+ There are a few arguments when running the program that will change the
+ output and/or formatting of the tests:
  * -a | to only print the failed tests
  * -s | to prevent printing the output of toString() calls
  * -m | to prevent printing section summaries
@@ -46,44 +46,132 @@ COMPILING AND RUNNING:
 
 PROGRAM DESIGN AND IMPORTANT CONCEPTS:
 
- 
- This is the sort of information someone who really wants to
- understand your program - possibly to make future enhancements -
- would want to know.
+ This double-linked list implements the interface of an indexed unsorted
+ list; as such, it must remain easily indexable without need for
+ organizing the list. This program does exactly that using Nodes instead
+ of a direct array to contain the list, and these Nodes carry "previous"
+ and "next" links that connect each other to their neighbors. Nodes,
+ however, are NOT responsible for the tracking of the beginning (head),
+ end (tail), size, or modifications (modCount) of the list.
 
- Explain the main concepts and organization of your program so that
- the reader can understand how your program works. This is not a repeat
- of javadoc comments or an exhaustive listing of all methods, but an
- explanation of the critical algorithms and object interactions that make
- up the program.
+ Due to the nature of how Nodes are handled in the list, the list does
+ not allow easily accessing an index in the list, unlike an array-type
+ list would allow. The list is indexable, not indexed. In order to
+ handle calls which provide an index, the call's respective method
+ iterates through the list to the given index using a for-loop.
 
- Explain the main responsibilities of the classes and interfaces that make
- up the program. Explain how the classes work together to achieve the program
- goals. If there are critical algorithms that a user should understand, 
- explain them as well.
- 
- If you were responsible for designing the program's classes and choosing
- how they work together, why did you design the program this way? What, if 
- anything, could be improved? 
+ This particular implementation of IndexedUnsortedList allows for the
+ use of a private iterator class with extended functionality,
+ DLLIterator, which implements the ListIterator interface. This means it
+ is only possible to create a DLLIterator object using the methods that
+ the list provides. When the iterator is created, it allows for the user
+ to start the iterator at a particular index. Otherwise, it is placed at
+ the beginning of the list, or head. This iterator is used as a major
+ driver for the list's own methods, as most of them create an iterator
+ to conduct their function, and are even refactored to have "central"
+ functions for adding or deleting Nodes at a specific index when it is
+ already known or found.
+
+ Inserting elements into the list has four special cases, which are all
+ appropriately handled as such: inserting at the head, inserting at the
+ tail, inserting into an empty list, and inserting into a "middle area"
+ with no special tracking variables. The way in which the latter-most of
+ those cases is handled is very important, because if the Nodes are
+ adjusted to handle a new element incorrectly, then some Nodes cannot be
+ referred to when updating their "previous" and "next" links. Or, worse
+ yet, the new Node's links end up pointing to itself or the wrong
+ neighbor, creating a permanent loop that makes the program hang.
+ Inserting a Node in the middle requires capturing the next Node's
+ predecessor, or the previous Node, before any link can be modified.
+
+ As mentioned previously, a variable exists within this list's objects
+ to track the modification count of the list. This is an important
+ variable because it allows the iterator class to know when the list was
+ modified without the iterator's knowledge. Like any iterator, it makes
+ a promise at its creation to return the list's contents truthfully and
+ fully. If the list is modified in any manner, it cannot fulfill its
+ promise, and throws a ConcurrentModificationException.
+
+ When a DLLIterator object is created, it first analyzes the provided
+ index to determine where it should begin its loop. More particularly,
+ it finds if the index is at a known point such as head or tail, but
+ otherwise finds where the index lands in the list in relation to its
+ midpoint (size divided by two), then starts indexing at head or tail
+ accordingly.
+
+ A Node-based implementation of an indexed unsorted list with double
+ links actually helps in regards to performance and readability, at the
+ cost of an extra reference to track another Node object in comparison
+ to a single-linked list. Finding, inserting, and deleting elements is
+ made simpler, but not quicker (in terms of Big-O performance). Some of
+ the biggest gains of double-linked lists are O(1) removal of the tail
+ and the iterator methods previous() and remove() not needing trailing
+ Node references.
+
+ To my knowledge, there are no remaining improvements to be done to the
+ list class, as it is already refactored and rewritten to center around
+ functions that take an index for one of its parameters. This is done
+ since any operation conducted on the list takes place somewhere in the
+ list, at a particular index; for example, there needn't be a separate
+ function to handle inserting an element at head when a central function
+ could know it takes place at index 0, and this function already handles
+ special cases such as this.
 
 
 TESTING:
 
- 
- How did you test your program to be sure it works and meets all of the
- requirements? What was the testing strategy? What kinds of tests were run?
- Can your program handle bad input? Is your program  idiot-proof? How do you 
- know? What are the known issues / bugs remaining in your program?
+ The testing strategy for this program was very scenario-based. The test
+ class has been written to implement all 82 change scenarios, leaving
+ little room for unknown errors. Each scenario in the test class builds
+ a double-linked list in a known state, applies a change or two, and
+ verifies the current list's state against what is expected. The list
+ and iterator scenarios (such as add(), remove(), etc) all feed the test
+ class the same way.
+
+ The edge cases handled in the change scenarios include empty lists,
+ one-element lists, two-element lists, and three-element lists. These
+ are necessary as the way the list class handles each of them changes
+ according to what the list is asked to do, whether it is inserting an
+ element at head or tail, making a list completely empty, or inserting
+ in the middle of a list. This is also necessary to ensure that a
+ DLLIterator object begins and ends where the user intends.
+
+ The provided framework in the test class already handles exceptions
+ that the list class can throw. Those namely being:
+ * IndexOutOfBoundsException for bad indexes,
+ * NoSuchElementException for a lack of a target element, or an empty
+      list,
+ * IllegalStateException for when the iterator's navigation methods have
+      not defined a last-returned Node, and
+ * ConcurrentModificationException for when the list was changed without
+      the iterator's knowledge.
+
+ The list class does not contain any known bugs, especially any that
+ cause failed tests. When the test class is run, all 4,653 tests pass.
+
+ I would not say this program is "idiot-proof"; nothing ever is.
+ However, it has been written so idiots have little room to cause
+ trouble.
 
 
 DISCUSSION:
 
- 
- Discuss the issues you encountered during programming (development)
- and testing. What problems did you have? What did you have to research
- and learn on your own? What kinds of errors did you get? How did you 
- fix them?
- 
- What parts of the project did you find challenging? Is there anything
- that finally "clicked" for you in the process of working on this project?
+ At one point, I encountered a program hang with a SINGLE scenario; it
+ was AB_add1C_ACB, and my debugging of the scenario itself found that
+ there wasn't an error in how it was written or implemented. The problem
+ was actually trying to insert in the middle of the list in the iterator
+ class, and more particularly how the links of the Nodes were ordered to
+ change. I tried to refer to the next Node's predecessor, or the
+ previous Node, after some links were already changed. I cannot recall
+ the exact order of the statements that caused this issue, but the
+ simple solution was to first store the previous Node in a reference,
+ then write the new Node's links before touching its neighbors. This
+ solution also improved the readability of that code segment.
 
+ This project was, by far, simpler than the single-linked project. Being
+ allowed to track a previous Node made both performance and readability
+ so much better. One improvement I made due to this project was in my
+ thinking style. Because of the complex nature of some of the concepts
+ in making this list class, I began drawing the pictures and putting my
+ ideas onto something tangible and then relating them to each other.
+ This made tracking my ideas and learning what doesn't work far easier.
