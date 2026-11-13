@@ -45,7 +45,10 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
      * this check in case a user is adding an element after the tail
      * element, which this would specifically prevent.
      * 
-     * @param index to ensure is not less than zero, or greater than or equal to size
+     * @param index to ensure is not less than zero, or greater than
+     *      or equal to size
+     * @throws IndexOutOfBoundsException if the given index is not valid
+     *      because it is not usable
      */
     public void checkForValidIndexBounds(int index) {
         if (index < 0 || index >= size) { throw new IndexOutOfBoundsException(); }
@@ -60,8 +63,10 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
      * throw a NoSuchElementException to indicate this error.
      * 
      * @param element of which to find the index in the list
-     * @throws NoSuchElementException if the element is not found (indexOf returns NOT_FOUND == -1)
-     * @return index number in list if the element is found (indexOf returns any value other than NOT_FOUND)
+     * @throws NoSuchElementException if the element is not found
+     *      (indexOf returns NOT_FOUND == -1)
+     * @return index number in list if the element is found (indexOf
+     *      returns any value other than NOT_FOUND)
      */
     public int checkForValidFoundIndex(T element) {
         int index = indexOf(element);
@@ -233,7 +238,7 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
 
         /**
          * Initialize an iterator before a certain point in the list.
-         * @param startingIndex
+         * @param startingIndex by which to begin iterating
          */
         public DLLIterator(int startingIndex) {
             if (startingIndex < 0 || startingIndex > size) {
@@ -247,7 +252,7 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
             } else if (startingIndex == size) {
                 nextNode = null; // Quick conditional exit for after tail
             } else { // All other cases
-                int currentIndex = 0;
+                int currentIndex;
                 if (startingIndex < (size / 2)) {
                     nextNode = head;
                     currentIndex = 0;
@@ -281,9 +286,21 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
          *      iterator's knowledge
          */
         public void checkForConcurrency() {
-            if (iterModCount != modCount) {
-                throw new ConcurrentModificationException();
-            }
+            if (iterModCount != modCount) { throw new ConcurrentModificationException(); }
+        }
+
+        /**
+         * Before adding a node or setting a node's element, the respective
+         * method needs to ensure that there was a last returned node, usually
+         * done by the navigation methods next() and previous(). If such node
+         * does not exist, or it is null, the iterator must throw an
+         * IllegalStateException and destroy itself.
+         * 
+         * @throws IllegalStateException if a navigation call was not done and
+         *      therefore did not return a node
+         */
+        public void checkForValidReturnedNode() {
+            if (lastReturnedNode == null) { throw new IllegalStateException(); }
         }
 
         @Override
@@ -332,9 +349,7 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
 
         @Override
         public T next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException();
-            }
+            if (!hasNext()) { throw new NoSuchElementException(); }
             T returnElement = nextNode.getElement();
             lastReturnedNode = nextNode;
             nextNode = nextNode.getNext();
@@ -349,14 +364,10 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
 
         @Override
         public T previous() {
-            if (!hasPrevious()) {
-                throw new NoSuchElementException();
-            }
-            if (nextNode != null) {
-                nextNode = nextNode.getPrev();
-            } else {
-                nextNode = tail;
-            }
+            if (!hasPrevious()) { throw new NoSuchElementException(); }
+
+            if (nextNode != null) { nextNode = nextNode.getPrev(); }
+            else { nextNode = tail; }
 
             lastReturnedNode = nextNode;
             return nextNode.getElement();
@@ -371,9 +382,7 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
         @Override
         public void remove() {
             checkForConcurrency();
-            if (lastReturnedNode == null) {
-                throw new IllegalStateException();
-            }
+            checkForValidReturnedNode();
 
             // Update all references
             if (lastReturnedNode == head && head == tail) { // Quick exit for one-element list
@@ -394,9 +403,7 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
                     lastReturnedNode.getPrev().setNext(lastReturnedNode.getNext());
                 }
 
-                if (lastReturnedNode == nextNode) {
-                    nextNode = nextNode.getNext();
-                }
+                if (lastReturnedNode == nextNode) { nextNode = nextNode.getNext(); }
             }
 
             size--;
@@ -408,9 +415,8 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
         @Override
         public void set(T arg0) {
             checkForConcurrency();
-            if (lastReturnedNode == null) {
-                throw new IllegalStateException();
-            }
+            checkForValidReturnedNode();
+            
             lastReturnedNode.setElement(arg0);
             modCount++;
             iterModCount++;

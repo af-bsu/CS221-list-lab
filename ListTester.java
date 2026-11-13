@@ -182,6 +182,8 @@ public class ListTester {
 		testEmptyList(A_removeA_emptyList, "A_removeA_emptyList");
 		testEmptyList(A_remove0_emptyList, "A_remove0_emptyList");
 		testEmptyList(A_iterRemoveAfterNextA_emptyList, "A_iterRemoveAfterNextA_emptyList");
+		testEmptyList(A_listIterRemoveAfterNextA_emptyList, "A_listIterRemoveAfterNextA_emptyList");
+		testEmptyList(A_listIterRemoveAfterPreviousA_emptyList, "A_listIterRemoveAfterPreviousA_emptyList");
 	
 		//1-element to 2-element
 		testTwoElementList(A_addToFrontB_BA, "A_addToFrontB_BA", LIST_BA, STRING_BA);
@@ -190,9 +192,14 @@ public class ListTester {
 		testTwoElementList(A_addB_AB, "A_addB_AB", LIST_AB, STRING_AB);
 		testTwoElementList(A_add0B_BA, "A_add0B_BA", LIST_BA, STRING_BA);
 		testTwoElementList(A_add1B_AB, "A_add1B_AB", LIST_AB, STRING_AB);
+		testTwoElementList(A_listIterAddB_BA, "A_listIterAddB_BA", LIST_BA, STRING_BA);
+		testTwoElementList(A_listIterAddAfterNextB_AB, "A_listIterAddAfterNextB_AB", LIST_AB, STRING_AB);
+		testTwoElementList(A_listIterAddAfterPreviousB_BA, "A_listIterAddAfterPreviousB_BA", LIST_BA, STRING_BA);
 
 		//1-element to changed 1-element via set()
 		testSingleElementList(A_set0B_B, "A_set0B_B", LIST_B, STRING_B);
+		testSingleElementList(A_listIterSetAfterNextB_B, "A_listIterSetAfterNextB_B", LIST_B, STRING_B);
+		testSingleElementList(A_listIterSetAfterPreviousB_B, "A_listIterSetAfterPreviousB_B", LIST_B, STRING_B);
 
 		//2-element to 1-element
 		testSingleElementList(AB_removeFirst_B, "AB_removeFirst_B", LIST_B, STRING_B);
@@ -203,6 +210,11 @@ public class ListTester {
 		testSingleElementList(AB_remove1_A, "AB_remove1_A", LIST_A, STRING_A);
 		testSingleElementList(AB_iterRemoveAfterNextA_B, "AB_iterRemoveAfterNextA_B", LIST_B, STRING_B);
 		testSingleElementList(AB_iterRemoveAfterNextB_A, "AB_iterRemoveAfterNextB_A", LIST_A, STRING_A);
+		testSingleElementList(AB_listIterRemoveAfterNextA_B, "AB_listIterRemoveAfterNextA_B", LIST_B, STRING_B);
+		testSingleElementList(AB_listIterRemoveAfterNextB_A, "AB_listIterRemoveAfterNextB_A", LIST_A, STRING_A);
+		testSingleElementList(AB_listIterRemoveAfterPreviousA_B, "AB_listIterRemoveAfterPreviousA_B", LIST_B, STRING_B);
+		testSingleElementList(AB_listIterRemoveAfterPreviousB_A, "AB_listIterRemoveAfterPreviousB_A", LIST_A, STRING_A);
+		
 
 		//2-element to 3-element
 		testThreeElementList(AB_addToFrontC_CAB, "AB_addToFrontC_CAB", LIST_CAB, STRING_CAB);
@@ -213,10 +225,19 @@ public class ListTester {
 		testThreeElementList(AB_add0C_CAB, "AB_add0C_CAB", LIST_CAB, STRING_CAB);
 		testThreeElementList(AB_add1C_ACB, "AB_add1C_ACB", LIST_ACB, STRING_ACB);
 		testThreeElementList(AB_add2C_ABC, "AB_add2C_ABC", LIST_ABC, STRING_ABC);
+		testThreeElementList(AB_listIterAddC_CAB, "AB_listIterAddC_CAB", LIST_CAB, STRING_CAB);
+		testThreeElementList(AB_listIterAddAfterNextC_ACB, "AB_listIterAddAfterNextC_ACB", LIST_ACB, STRING_ACB);
+		testThreeElementList(AB_listIterAddAfterNextC_ABC, "AB_listIterAddAfterNextC_ABC", LIST_ABC, STRING_ABC);
+		testThreeElementList(AB_listIterAddAfterPreviousC_CAB, "AB_listIterAddAfterPreviousC_CAB", LIST_CAB, STRING_CAB);
+		testThreeElementList(AB_listIterAddAfterPreviousC_ACB, "AB_listIterAddAfterPreviousC_ACB", LIST_ACB, STRING_ACB);
 
 		//2-element to changed 2-element via set()
 		testTwoElementList(AB_set0C_CB, "AB_set0C_CB", LIST_CB, STRING_CB);
 		testTwoElementList(AB_set1C_AC, "AB_set1C_AC", LIST_AC, STRING_AC);
+		testTwoElementList(AB_listIterSetAfterNextC_CB, "AB_listIterSetAfterNextC_CB", LIST_CB, STRING_CB);
+		testTwoElementList(AB_listIterSetAfterNextC_AC, "AB_listIterSetAfterNextC_AC", LIST_AC, STRING_AC);
+		testTwoElementList(AB_listIterSetAfterPreviousC_AC, "AB_listIterSetAfterPreviousC_AC", LIST_AC, STRING_AC);
+		testTwoElementList(AB_listIterSetAfterPreviousC_CB, "AB_listIterSetAfterPreviousC_CB", LIST_CB, STRING_CB);
 
 		//3-element to 2-element
 		testTwoElementList(ABC_removeFirst_BC, "ABC_removeFirst_BC", LIST_BC, STRING_BC);
@@ -230,11 +251,23 @@ public class ListTester {
 		testTwoElementList(ABC_iterRemoveAfterNextA_BC, "ABC_iterRemoveAfterNextA_BC", LIST_BC, STRING_BC);
 		testTwoElementList(ABC_iterRemoveAfterNextB_AC, "ABC_iterRemoveAfterNextB_AC", LIST_AC, STRING_AC);
 		testTwoElementList(ABC_iterRemoveAfterNextC_AB, "ABC_iterRemoveAfterNextC_AB", LIST_AB, STRING_AB);
+		testTwoElementList(ABC_listIterRemoveAfterNextA_BC, "ABC_listIterRemoveAfterNextA_BC", LIST_BC, STRING_BC);
+		testTwoElementList(ABC_listIterRemoveAfterNextB_AC, "ABC_listIterRemoveAfterNextB_AC", LIST_AC, STRING_AC);
+		testTwoElementList(ABC_listIterRemoveAfterNextC_AB, "ABC_listIterRemoveAfterNextC_AB", LIST_AB, STRING_AB);
+		testTwoElementList(ABC_listIterRemoveAfterPreviousA_BC, "ABC_listIterRemoveAfterPreviousA_BC", LIST_BC, STRING_BC);
+		testTwoElementList(ABC_listIterRemoveAfterPreviousB_AC, "ABC_listIterRemoveAfterPreviousB_AC", LIST_AC, STRING_AC);
+		testTwoElementList(ABC_listIterRemoveAfterPreviousC_AB, "ABC_listIterRemoveAfterPreviousC_AB", LIST_AB, STRING_AB);
 
 		//3-element to changed 3-element via set()
 		testThreeElementList(ABC_set0D_DBC, "ABC_set0D_DBC", LIST_DBC, STRING_DBC);
 		testThreeElementList(ABC_set1D_ADC, "ABC_set1D_ADC", LIST_ADC, STRING_ADC);
 		testThreeElementList(ABC_set2D_ABD, "ABC_set2D_ABD", LIST_ABD, STRING_ABD);
+		testThreeElementList(ABC_listIterSetAfterNextD_DBC, "ABC_listIterSetAfterNextD_DBC", LIST_DBC, STRING_DBC);
+		testThreeElementList(ABC_listIterSetAfterNextD_ADC, "ABC_listIterSetAfterNextD_ADC", LIST_ADC, STRING_ADC);
+		testThreeElementList(ABC_listIterSetAfterNextD_ABD, "ABC_listIterSetAfterNextD_ABD", LIST_ABD, STRING_ABD);
+		testThreeElementList(ABC_listIterSetAfterPreviousD_ABD, "ABC_listIterSetAfterPreviousD_ABD", LIST_ABD, STRING_ABD);
+		testThreeElementList(ABC_listIterSetAfterPreviousD_ADC, "ABC_listIterSetAfterPreviousD_ADC", LIST_ADC, STRING_ADC);
+		testThreeElementList(ABC_listIterSetAfterPreviousD_DBC, "ABC_listIterSetAfterPreviousD_DBC", LIST_DBC, STRING_DBC);
 
 		//Iterator concurrency tests
 		test_IterConcurrency();
@@ -2729,6 +2762,7 @@ public class ListTester {
 	////////////////////////////////////////////////////////
 
 	/** run ListIterator concurrency tests */
+        @SuppressWarnings("CallToPrintStackTrace")
 	private void test_ListIterConcurrency() {
 		System.out.println("\nListIterator Concurrency Tests\n");
 		try {
