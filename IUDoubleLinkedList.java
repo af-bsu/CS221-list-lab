@@ -316,28 +316,27 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
 
             if (isEmpty()) { // Case: empty list
                 head = tail = newNode;
-                nextNode = newNode;
             } else if (nextNode == null) { // Case: adding after tail
                 tail.setNext(newNode);
                 newNode.setPrev(tail);
                 tail = newNode;
-                nextNode = newNode;
             } else if (nextNode == head) { // Case: adding at head
                 head.setPrev(newNode);
                 newNode.setNext(head);
                 head = newNode;
-                nextNode = newNode;
             } else { // All other cases
-                Node<T> prev = nextNode.getPrev(); // For readability of calls
+                Node<T> prev = nextNode.getPrev(); // Middle of list
                 newNode.setPrev(prev);
                 newNode.setNext(nextNode);
                 prev.setNext(newNode);
                 nextNode.setPrev(newNode);
             }
 
+            nextIndex++;
             size++;
             modCount++;
             iterModCount++;
+            lastReturnedNode = null;
         }
 
         @Override
@@ -359,6 +358,7 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
             T returnElement = nextNode.getElement();
             lastReturnedNode = nextNode;
             nextNode = nextNode.getNext();
+            nextIndex++;
             return returnElement;
         }
 
@@ -371,11 +371,10 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
         @Override
         public T previous() {
             if (!hasPrevious()) { throw new NoSuchElementException(); }
-
-            if (nextNode != null) { nextNode = nextNode.getPrev(); }
-            else { nextNode = tail; }
-
+            // If the next node is null, then the previous node is the tail
+            nextNode = (nextNode != null) ? nextNode.getPrev() : tail;
             lastReturnedNode = nextNode;
+            nextIndex--;
             return nextNode.getElement();
         }
 
@@ -390,27 +389,19 @@ public class IUDoubleLinkedList<T> implements IndexedUnsortedList<T>{
             checkForConcurrency();
             checkForValidReturnedNode();
 
-            // Update all references
-            if (lastReturnedNode == head && head == tail) { // Quick exit for one-element list
-                head = tail = null;
-                lastReturnedNode = null;
-            } else { // Necessary else statement? ListIterator fails some tests otherwise
-                if (lastReturnedNode == tail) {
-                    tail = tail.getPrev();
-                    tail.setNext(null);
-                } else {
-                    lastReturnedNode.getNext().setPrev(lastReturnedNode.getPrev());
-                }
-
-                if (lastReturnedNode == head) {
-                    head = head.getNext();
-                    head.setPrev(null);
-                } else {
-                    lastReturnedNode.getPrev().setNext(lastReturnedNode.getNext());
-                }
-
-                if (lastReturnedNode == nextNode) { nextNode = nextNode.getNext(); }
+            // Fix cursor
+            if (lastReturnedNode == nextNode) { // Node is from previous() call
+                nextNode = nextNode.getNext();
+            } else { // Node is from next() call
+                nextIndex--;
             }
+
+            // Unlink everything
+            if (lastReturnedNode == head) { head = head.getNext(); }
+            else { lastReturnedNode.getPrev().setNext(lastReturnedNode.getNext()); }
+
+            if (lastReturnedNode == tail) { tail = tail.getPrev(); }
+            else { lastReturnedNode.getNext().setPrev(lastReturnedNode.getPrev()); }
 
             size--;
             modCount++;
